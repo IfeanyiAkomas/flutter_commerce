@@ -1,7 +1,9 @@
 import 'package:e_commerce/components/product_card.dart';
+import 'package:e_commerce/screens/login_screen.dart';
 import 'package:e_commerce/screens/product_details_screen.dart';
 import 'package:e_commerce/providers/auth_provider.dart';
 import 'package:e_commerce/providers/product_provider.dart';
+import 'package:e_commerce/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,7 +16,7 @@ class HomeScreen extends ConsumerWidget {
     final productsAsync = ref.watch(productListProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Immersive Commerce"),
         titleTextStyle: TextStyle(
@@ -22,13 +24,19 @@ class HomeScreen extends ConsumerWidget {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await auth.logout();
-              Navigator.pushReplacementNamed(context, '/login');
+            color: Colors.white,
+            tooltip: "Logout",
+            onPressed: () {
+              // Simulate logout and navigate to LoginScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
             },
           ),
         ],
@@ -37,7 +45,7 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _header(),
+            _header(context),
             const SizedBox(height: 10),
             const SizedBox(height: 20),
             Padding(
@@ -94,22 +102,69 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _header() {
+  Widget _header(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: const [
-          CircleAvatar(
-            backgroundColor: Colors.blue,
-            radius: 24,
-            child: Icon(Icons.person, color: Colors.white),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blueAccent.withOpacity(0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          SizedBox(width: 12),
-          Text(
-            "Hi there 👋",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          child: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.blueAccent, width: 2),
+                ),
+                child: const CircleAvatar(
+                  backgroundColor: Colors.blueAccent,
+                  radius: 24,
+                  child: Icon(Icons.person, color: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Hi there 👋",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "View Profile",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.blueAccent,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
