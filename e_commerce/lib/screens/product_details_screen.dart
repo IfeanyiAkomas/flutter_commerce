@@ -14,6 +14,7 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Map<String, dynamic>? product;
   bool isLoading = true;
+  bool isExpanded = false;
   String? error;
 
   @override
@@ -52,6 +53,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(product?['title'] ?? 'Product Details'),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
         backgroundColor: Colors.blueAccent,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -77,31 +83,64 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   Text(
                     product!['title'],
                     style: const TextStyle(
-                      fontSize: 22,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      height: 1.3,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Text(
                     "\$${product!['price']}",
                     style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.blueAccent,
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
+                      color: Colors.blueAccent,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   const Text(
                     "Description",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    product!['description'],
-                    style: const TextStyle(fontSize: 16),
+                  GestureDetector(
+                    onTap: () => setState(() => isExpanded = !isExpanded),
+                    child: AnimatedCrossFade(
+                      firstChild: Text(
+                        product!['description'],
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
+                      ),
+                      secondChild: Text(
+                        product!['description'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
+                      ),
+                      crossFadeState: isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 300),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextButton(
+                    onPressed: () => setState(() => isExpanded = !isExpanded),
+                    child: Text(
+                      isExpanded ? "Show Less" : "Read More",
+                      style: const TextStyle(color: Colors.blueAccent),
+                    ),
                   ),
                   const SizedBox(height: 30),
                   Center(
