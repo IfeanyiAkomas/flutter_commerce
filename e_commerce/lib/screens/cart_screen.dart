@@ -1,4 +1,3 @@
-import 'package:e_commerce/main_navigation.dart';
 import 'package:e_commerce/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,12 +170,15 @@ Widget _buildEmptyCart(BuildContext context) {
           ),
           const SizedBox(height: 30),
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => MainNavigation()),
-              );
-            },
+            onPressed:() {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HomeScreen(
+                                ),
+                            ),
+                          );
+                        },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),

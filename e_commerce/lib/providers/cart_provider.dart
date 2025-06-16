@@ -9,7 +9,13 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   CartNotifier() : super([]);
 
   void addToCart(CartItem item) {
-    state = [...state, item];
+    final index = state.indexWhere((i) => i.id == item.id);
+    if (index != -1) {
+      final updated = state[index].copyWith(quantity: state[index].quantity + 1);
+      state = [...state]..[index] = updated;
+    } else {
+      state = [...state, item];
+    }
   }
 
   void removeFromCart(String id) {

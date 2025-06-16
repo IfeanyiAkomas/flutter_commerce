@@ -3,7 +3,6 @@ import 'package:e_commerce/models/cart.dart';
 import 'package:e_commerce/models/review_model.dart';
 import 'package:e_commerce/providers/cart_provider.dart';
 import 'package:e_commerce/providers/favorite_provider.dart';
-import 'package:e_commerce/providers/reviews_provider.dart';
 import 'package:e_commerce/screens/cart_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,10 +22,12 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   bool isExpanded = false;
   bool isLoading = false;
   String? error;
-  final TextEditingController _commentController = TextEditingController();
-  late Map<String, dynamic>? product;
 
+  final TextEditingController _commentController = TextEditingController();
   final TextEditingController _reviewController = TextEditingController();
+
+  late Map<String, dynamic> product;
+
   final List<Review> reviews = [
     Review(
       name: "Jane Doe",
@@ -43,7 +44,12 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    product = widget.product;
+    // Assign product from widget
+    if (widget.product != null) {
+      product = widget.product!;
+    } else {
+      error = "Product not found";
+    }
   }
 
   Future<void> addToCart(
@@ -54,11 +60,20 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     if (product == null) return;
 
     try {
-      ref.read(cartProvider.notifier).addToCart(product['id']);
+      final cartItem = CartItem(
+        id: product['id'].toString(),
+        title: product['title'] ?? 'No Title',
+        image: product['image'] ?? '',
+        price: double.tryParse(product['price'].toString()) ?? 0.0,
+      );
+
+      ref.read(cartProvider.notifier).addToCart(cartItem);
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Added to cart')));
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error adding to cart: $e')));
@@ -301,76 +316,3 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     );
   }
 }
-
-// Widget _buildBottomSection(BuildContext context, WidgetRef ref) {
-//   final TextEditingController _commentController = TextEditingController();
-
-//   return SafeArea(
-//     child: Container(
-//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         border: Border(top: BorderSide(color: Colors.grey.shade300)),
-//       ),
-//       child: Row(
-//         children: [
-//           Expanded(
-//             child: Container(
-//               padding: const EdgeInsets.symmetric(horizontal: 12),
-//               decoration: BoxDecoration(
-//                 color: Colors.grey.shade100,
-//                 borderRadius: BorderRadius.circular(30),
-//               ),
-//               child: Row(
-//                 children: [
-//                   const Icon(Icons.comment, color: Colors.grey),
-//                   const SizedBox(width: 8),
-//                   Expanded(
-//                     child: TextField(
-//                       controller: _commentController,
-//                       decoration: const InputDecoration(
-//                         hintText: "Write a review...",
-//                         border: InputBorder.none,
-//                       ),
-//                     ),
-//                   ),
-//                   IconButton(
-//                     icon: const Icon(Icons.send, color: Colors.blueAccent),
-//                     onPressed: () {
-//                       if (_commentController.text.trim().isNotEmpty) {
-//                         // You can connect this with your actual reviews list or backend
-//                         reviews.add(
-//                           Review(
-//                             name: "You",
-//                             image: "https://i.pravatar.cc/150?u=me",
-//                             comment: _commentController.text.trim(),
-//                           ),
-//                         );
-//                         _commentController.clear();
-//                         // Refresh UI if needed
-//                       }
-//                     },
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//           const SizedBox(width: 12),
-//           ElevatedButton.icon(
-//             onPressed: () => addToCart(ref, product, context),
-//             icon: const Icon(Icons.shopping_cart),
-//             label: const Text("Add"),
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: Colors.blueAccent,
-//               foregroundColor: Colors.white,
-//               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(30),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//   );
-// }
