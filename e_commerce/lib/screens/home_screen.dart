@@ -17,6 +17,11 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text("Immersive Commerce"),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
         backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
@@ -25,7 +30,7 @@ class HomeScreen extends ConsumerWidget {
               await auth.logout();
               Navigator.pushReplacementNamed(context, '/login');
             },
-          )
+          ),
         ],
       ),
       body: SafeArea(
@@ -40,27 +45,29 @@ class HomeScreen extends ConsumerWidget {
               child: Text(
                 "Explore Products",
                 style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: Colors.blueAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Expanded(
               child: productsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    Center(child: Text('Error loading products: ${e.toString()}')),
+                error: (e, _) => Center(
+                  child: Text('Error loading products: ${e.toString()}'),
+                ),
                 data: (products) => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GridView.builder(
                     itemCount: products.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 0.7,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.7,
+                        ),
                     itemBuilder: (context, index) {
                       final product = products[index];
                       return ProductCard(
@@ -69,7 +76,9 @@ class HomeScreen extends ConsumerWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ProductDetailsScreen(productId: product['id']),
+                              builder: (_) => ProductDetailsScreen(
+                                productId: product['id'],
+                              ),
                             ),
                           );
                         },
@@ -78,7 +87,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -98,11 +107,8 @@ class HomeScreen extends ConsumerWidget {
           SizedBox(width: 12),
           Text(
             "Hi there 👋",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
-          )
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
