@@ -1,4 +1,5 @@
 import 'package:e_commerce/screens/cart_screen.dart';
+import 'package:e_commerce/screens/favorites_screen.dart';
 import 'package:e_commerce/screens/home_screen.dart';
 import 'package:e_commerce/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   final List<Widget> _screens = [
   HomeScreen(),
   CartScreen(),
+  FavoriteScreen(),
   ProfileScreen(),
 ];
 
@@ -23,12 +25,14 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   final List<IconData> _icons = [
     Icons.home_rounded,
     Icons.shopping_cart_rounded,
+    Icons.favorite,
     Icons.person_rounded,
   ];
 
   final List<String> _titles = [
     "Home",
     "Cart",
+    "Favorites",
     "Profile",
   ];
 

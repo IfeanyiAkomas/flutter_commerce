@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
 
-final authProvider = StateNotifierProvider<AuthNotifier, bool>((ref) => AuthNotifier());
+final authProvider = StateNotifierProvider<AuthNotifier, bool>(
+  (ref) => AuthNotifier(),
+);
 
 class AuthNotifier extends StateNotifier<bool> {
   AuthNotifier() : super(false) {
@@ -9,18 +11,26 @@ class AuthNotifier extends StateNotifier<bool> {
   }
 
   Future<void> checkAuthStatus() async {
-    state = await AuthService.isLoggedIn();
+    final isLoggedIn = await AuthService.isLoggedIn();
+    state = isLoggedIn;
   }
 
   Future<bool> login(String email, String password) async {
+    final userExists = await AuthService.userExists(email);
+    if (!userExists) {
+      state = false;
+      return false;
+    }
+
     final success = await AuthService.login(email, password);
     state = success;
     return success;
   }
 
-  Future<void> register(String email, String password) async {
-    await AuthService.register(email, password);
-    state = true;
+  Future<bool> register(String email, String password) async {
+    final success = await AuthService.register(email, password);
+    state = success;
+    return success;
   }
 
   Future<void> logout() async {

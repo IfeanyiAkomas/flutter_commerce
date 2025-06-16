@@ -1,4 +1,5 @@
 import 'package:e_commerce/providers/auth_provider.dart';
+import 'package:e_commerce/screens/login_screen.dart';
 import 'package:e_commerce/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,9 +37,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final auth = ref.read(authProvider.notifier);
     setState(() => _isLoading = true);
-    await auth.register(email, pass);
-    setState(() => _isLoading = false);
-    Navigator.pushReplacementNamed(context, '/home');
+    try {
+      await auth.register(email, pass);
+      Navigator.push(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+    } catch (e) {
+      _showSnack('User already exists!');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _showSnack(String msg) {
@@ -49,13 +55,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF1A73E8), Color(0xFF4285F4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        decoration: const BoxDecoration(color: Colors.white),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -75,7 +75,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.person_add_alt_1, size: 60, color: Colors.blue),
+                    const Icon(
+                      Icons.person_add_alt_1,
+                      size: 60,
+                      color: Colors.blue,
+                    ),
                     const SizedBox(height: 16),
                     const Text(
                       "Create an Account",
@@ -88,9 +92,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: 24),
                     _buildTextField(emailCtrl, "Email", Icons.email),
                     const SizedBox(height: 16),
-                    _buildTextField(passCtrl, "Password", Icons.lock, obscure: true),
+                    _buildTextField(
+                      passCtrl,
+                      "Password",
+                      Icons.lock,
+                      obscure: true,
+                    ),
                     const SizedBox(height: 16),
-                    _buildTextField(confirmPassCtrl, "Confirm Password", Icons.lock_outline, obscure: true),
+                    _buildTextField(
+                      confirmPassCtrl,
+                      "Confirm Password",
+                      Icons.lock_outline,
+                      obscure: true,
+                    ),
                     const SizedBox(height: 32),
                     CustomButton(
                       text: "Sign Up",
@@ -107,7 +121,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         "Already have an account? Login",
                         style: TextStyle(color: Colors.blueAccent),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -118,7 +132,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String hint, IconData icon, {bool obscure = false}) {
+  Widget _buildTextField(
+    TextEditingController ctrl,
+    String hint,
+    IconData icon, {
+    bool obscure = false,
+  }) {
     return TextField(
       controller: ctrl,
       obscureText: obscure,
@@ -126,8 +145,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         hintText: hint,
         prefixIcon: Icon(icon, color: Colors.blue),
         filled: true,
-        fillColor: Colors.blue[50],
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 12,
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.blue),

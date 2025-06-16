@@ -1,8 +1,12 @@
+import 'package:e_commerce/main_navigation.dart';
+import 'package:e_commerce/providers/auth_provider.dart';
+import 'package:e_commerce/screens/home_screen.dart';
 import 'package:e_commerce/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   static Route<void> route() {
@@ -10,16 +14,19 @@ class LoginScreen extends StatefulWidget {
   }
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passCtrl = TextEditingController();
   bool _isLoading = false;
 
   void _login() async {
-    if (_emailCtrl.text.trim().isEmpty || _passCtrl.text.trim().isEmpty) {
+    final email = _emailCtrl.text.trim();
+    final password = _passCtrl.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter email and password")),
       );
@@ -27,25 +34,55 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2)); // mock login
-    setState(() => _isLoading = false);
-    Navigator.pushReplacementNamed(context, '/home');
+
+    try {
+      final success = await ref
+          .read(authProvider.notifier)
+          .login(email, password);
+
+      setState(() => _isLoading = false);
+
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MainNavigation()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Invalid email or password")),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+      return;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-              const Icon(Icons.lock_open_rounded, size: 100, color: Colors.blue),
+              const Icon(
+                Icons.lock_open_rounded,
+                size: 100,
+                color: Colors.blue,
+              ),
               const SizedBox(height: 24),
               const Text(
                 "Welcome Back",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.blue),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(

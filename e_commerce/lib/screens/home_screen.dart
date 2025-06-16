@@ -32,7 +32,6 @@ class HomeScreen extends ConsumerWidget {
             color: Colors.white,
             tooltip: "Logout",
             onPressed: () {
-              // Simulate logout and navigate to LoginScreen
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -85,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => ProductDetailsScreen(
-                                productId: product['id'],
+                                product: product,
                               ),
                             ),
                           );

@@ -1,3 +1,5 @@
+import 'package:e_commerce/main_navigation.dart';
+import 'package:e_commerce/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/cart_provider.dart';
@@ -24,9 +26,10 @@ class CartScreen extends ConsumerWidget {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: cartItems.isEmpty
-          ? const Center(child: Text("🛒 Your cart is empty"))
+          ? _buildEmptyCart(context)
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -93,7 +96,7 @@ class CartScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -107,6 +110,11 @@ class CartScreen extends ConsumerWidget {
                       ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
+                          textStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                           backgroundColor: Colors.blueAccent,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
@@ -116,7 +124,14 @@ class CartScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text("Checkout"),
+                        child: Text(
+                          "Checkout",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -125,4 +140,57 @@ class CartScreen extends ConsumerWidget {
             ),
     );
   }
+}
+
+Widget _buildEmptyCart(BuildContext context) {
+  return Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.shopping_cart_outlined,
+            size: 100,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "Your cart is empty",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            "Looks like you haven’t added anything yet.\nStart shopping to fill it up!",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => MainNavigation()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              "Start Shopping",
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

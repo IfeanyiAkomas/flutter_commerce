@@ -1,171 +1,376 @@
 import 'dart:convert';
+import 'package:e_commerce/models/cart.dart';
+import 'package:e_commerce/models/review_model.dart';
+import 'package:e_commerce/providers/cart_provider.dart';
+import 'package:e_commerce/providers/favorite_provider.dart';
+import 'package:e_commerce/providers/reviews_provider.dart';
+import 'package:e_commerce/screens/cart_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
-class ProductDetailsScreen extends StatefulWidget {
-  final int productId;
+class ProductDetailsScreen extends ConsumerStatefulWidget {
+  final Map<String, dynamic>? product;
 
-  const ProductDetailsScreen({super.key, required this.productId});
+  const ProductDetailsScreen({super.key, this.product});
 
   @override
-  State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+  ConsumerState<ProductDetailsScreen> createState() =>
+      _ProductDetailsScreenState();
 }
 
-class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
-  Map<String, dynamic>? product;
-  bool isLoading = true;
+class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   bool isExpanded = false;
+  bool isLoading = false;
   String? error;
+  final TextEditingController _commentController = TextEditingController();
+  late Map<String, dynamic>? product;
+
+  final TextEditingController _reviewController = TextEditingController();
+  final List<Review> reviews = [
+    Review(
+      name: "Jane Doe",
+      image: "https://i.pravatar.cc/150?img=4",
+      comment: "Great quality product!",
+    ),
+    Review(
+      name: "John Smith",
+      image: "https://i.pravatar.cc/150?img=6",
+      comment: "Loved it, would recommend.",
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
-    fetchProductDetails();
+    product = widget.product;
   }
 
-  Future<void> fetchProductDetails() async {
-    final url = Uri.parse(
-      "https://fakestoreapi.com/products/${widget.productId}",
-    );
+  Future<void> addToCart(
+    WidgetRef ref,
+    Map<String, dynamic>? product,
+    BuildContext context,
+  ) async {
+    if (product == null) return;
 
     try {
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          product = jsonDecode(response.body);
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load product');
-      }
+      ref.read(cartProvider.notifier).addToCart(product['id']);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Added to cart')));
     } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error adding to cart: $e')));
     }
+  }
+
+  void submitReviewFromBottomBar() {
+    if (_commentController.text.trim().isEmpty) return;
+    setState(() {
+      reviews.add(
+        Review(
+          name: "You",
+          image: "https://i.pravatar.cc/150?u=me",
+          comment: _commentController.text.trim(),
+        ),
+      );
+      _commentController.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final product = widget.product;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(product?['title'] ?? 'Product Details'),
-        titleTextStyle: TextStyle(
+        title: Text(product!['title'] ?? 'Product Details'),
+        titleTextStyle: const TextStyle(
           color: Colors.white,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
         backgroundColor: Colors.blueAccent,
         iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : error != null
-          ? Center(child: Text('Error: $error'))
-          : product == null
-          ? const Center(child: Text('No product found.'))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        actions: [
+          // Favorite Button
+          Consumer(
+            builder: (context, ref, _) {
+              final favorites = ref.watch(favoritesProvider);
+              final isFav = favorites.any(
+                (item) => item['id'] == product!['id'],
+              );
+
+              return IconButton(
+                icon: Icon(
+                  isFav ? Icons.favorite : Icons.favorite_border,
+                  color: isFav ? Colors.red : Colors.white,
+                ),
+                onPressed: () {
+                  ref.read(favoritesProvider.notifier).toggleFavorite(product!);
+                },
+              );
+            },
+          ),
+
+          // Cart Button with Badge
+          Consumer(
+            builder: (context, ref, _) {
+              final cart = ref.watch(cartProvider);
+              return Stack(
+                alignment: Alignment.center,
                 children: [
-                  Center(
-                    child: Hero(
-                      tag: product!['image'],
-                      child: Image.network(
-                        product!['image'],
-                        height: 250,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CartScreen()),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  const SizedBox(height: 24),
-                  Text(
-                    product!['title'],
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "\$${product!['price']}",
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blueAccent,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Description",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => setState(() => isExpanded = !isExpanded),
-                    child: AnimatedCrossFade(
-                      firstChild: Text(
-                        product!['description'],
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                          height: 1.5,
+                  if (cart.isNotEmpty)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
                         ),
-                      ),
-                      secondChild: Text(
-                        product!['description'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                          height: 1.5,
-                        ),
-                      ),
-                      crossFadeState: isExpanded
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 300),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextButton(
-                    onPressed: () => setState(() => isExpanded = !isExpanded),
-                    child: Text(
-                      isExpanded ? "Show Less" : "Read More",
-                      style: const TextStyle(color: Colors.blueAccent),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Center(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Handle Add to Cart
-                      },
-                      icon: const Icon(Icons.shopping_cart),
-                      label: const Text("Add to Cart"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        child: Text(
+                          cart.length.toString(),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
+              );
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Hero(
+                tag: product!['image'],
+                child: Image.network(
+                  product['image'],
+                  height: 250,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
+            const SizedBox(height: 20),
+            Text(
+              product!['title'],
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "\$${product!['price']}",
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: Colors.blueAccent,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "Description",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => setState(() => isExpanded = !isExpanded),
+              child: AnimatedCrossFade(
+                firstChild: Text(
+                  product!['description'],
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, height: 1.5),
+                ),
+                secondChild: Text(
+                  product!['description'],
+                  style: const TextStyle(fontSize: 16, height: 1.5),
+                ),
+                crossFadeState: isExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 300),
+              ),
+            ),
+            TextButton(
+              onPressed: () => setState(() => isExpanded = !isExpanded),
+              child: Text(
+                isExpanded ? "Show Less" : "Read More",
+                style: const TextStyle(color: Colors.blueAccent),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "Reviews",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            ...reviews.map(
+              (review) => ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(review.image),
+                ),
+                title: Text(review.name),
+                subtitle: Text(review.comment),
+              ),
+            ),
+            const SizedBox(height: 90),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Colors.grey.shade300)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.comment, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: const InputDecoration(
+                            hintText: "Write a review...",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send, color: Colors.blueAccent),
+                        onPressed: submitReviewFromBottomBar,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () => addToCart(ref, product, context),
+                icon: const Icon(Icons.shopping_cart),
+                label: const Text("Add"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
+
+// Widget _buildBottomSection(BuildContext context, WidgetRef ref) {
+//   final TextEditingController _commentController = TextEditingController();
+
+//   return SafeArea(
+//     child: Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         border: Border(top: BorderSide(color: Colors.grey.shade300)),
+//       ),
+//       child: Row(
+//         children: [
+//           Expanded(
+//             child: Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 12),
+//               decoration: BoxDecoration(
+//                 color: Colors.grey.shade100,
+//                 borderRadius: BorderRadius.circular(30),
+//               ),
+//               child: Row(
+//                 children: [
+//                   const Icon(Icons.comment, color: Colors.grey),
+//                   const SizedBox(width: 8),
+//                   Expanded(
+//                     child: TextField(
+//                       controller: _commentController,
+//                       decoration: const InputDecoration(
+//                         hintText: "Write a review...",
+//                         border: InputBorder.none,
+//                       ),
+//                     ),
+//                   ),
+//                   IconButton(
+//                     icon: const Icon(Icons.send, color: Colors.blueAccent),
+//                     onPressed: () {
+//                       if (_commentController.text.trim().isNotEmpty) {
+//                         // You can connect this with your actual reviews list or backend
+//                         reviews.add(
+//                           Review(
+//                             name: "You",
+//                             image: "https://i.pravatar.cc/150?u=me",
+//                             comment: _commentController.text.trim(),
+//                           ),
+//                         );
+//                         _commentController.clear();
+//                         // Refresh UI if needed
+//                       }
+//                     },
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//           const SizedBox(width: 12),
+//           ElevatedButton.icon(
+//             onPressed: () => addToCart(ref, product, context),
+//             icon: const Icon(Icons.shopping_cart),
+//             label: const Text("Add"),
+//             style: ElevatedButton.styleFrom(
+//               backgroundColor: Colors.blueAccent,
+//               foregroundColor: Colors.white,
+//               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(30),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     ),
+//   );
+// }
